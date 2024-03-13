@@ -95,6 +95,9 @@ void NewProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesPerB
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    
+    synthesiser.setCurrentPlaybackSampleRate(sampleRate);
+    synthAudioSource.prepareToPlay(samplesPerBlock, sampleRate);
 }
 
 void NewProjectAudioProcessor::releaseResources()
@@ -143,6 +146,11 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     // this code if your algorithm always overwrites all the output channels.
     for (auto i = totalNumInputChannels; i < totalNumOutputChannels; ++i)
         buffer.clear (i, 0, buffer.getNumSamples());
+    
+    // MAGIC GUI: send midi messages to the keyboard state and MidiLearn
+    magicState.processMidiBuffer (midiMessages, buffer.getNumSamples(), true);
+    // MAGIC GUI: send playhead information to the GUI
+    magicState.updatePlayheadInformation (getPlayHead());
 
     // This is the place where you'd normally do the guts of your plugin's
     // audio processing...
@@ -150,12 +158,19 @@ void NewProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, j
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
-
-        // ..do something to the data...
-    }
+//    for (int channel = 0; channel < totalNumInputChannels; ++channel)
+//    {
+//        auto* channelData = buffer.getWritePointer (channel);
+//
+//        // ..do something to the data...
+//    }
+    
+    juce::AudioSourceChannelInfo bufferInfo;
+    bufferInfo.buffer = &buffer;  // Assuming buffer is your AudioBuffer<float>
+    bufferInfo.startSample = 0;
+    bufferInfo.numSamples = buffer.getNumSamples();
+//    synthesiser.renderNextBlock (buffer, prevPredictions[predictionBufferIndex], 0, buffer.getNumSamples());
+    synthAudioSource.getNextAudioBlock(bufferInfo, midiMessages);
 }
 
 //==============================================================================

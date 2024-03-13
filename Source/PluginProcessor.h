@@ -9,6 +9,7 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "SynthAudioSource.cpp"
 
 //==============================================================================
 /**
@@ -53,7 +54,13 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+protected:
+    MagicProcessorState magicState { *this };
+    
 private:
+    juce::Synthesiser      synthesiser;
+    SynthAudioSource synthAudioSource;
+    
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (NewProjectAudioProcessor)
 };
